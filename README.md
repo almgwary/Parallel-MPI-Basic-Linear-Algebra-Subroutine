@@ -22,23 +22,18 @@ solve system of linear equation with parallel MPI
     
     
 ## matrix A
- '''
- 1, 1, -2, 1, 3, -1 
-
- 2, -1, 1, 2, 1, -3
-
- 1, 3, -3, -1, 2, 1
-
- 5, 2, -1, -1, 2, 1
-
- -3, 1, 2, 3, 1, 3
-
- 4, 3, 1, -6, -3, -2
- ''' 
+ 
+   1, 1, -2, 1, 3, -1  
+   2, -1, 1, 2, 1, -3  
+   1, 3, -3, -1, 2, 1  
+   5, 2, -1, -1, 2, 1  
+   -3, 1, 2, 3, 1, 3  
+   4, 3, 1, -6, -3, -2  
+    
 
 ## matrix C
 
-'''
+ 
 
     4
     20  
@@ -46,13 +41,11 @@ solve system of linear equation with parallel MPI
     -3
     16 
     -27
-    
-'''
+ 
 
 # Result
 ## matrix B
-
-'''
+ 
 
     a =  1  
     b = -2  
@@ -61,11 +54,11 @@ solve system of linear equation with parallel MPI
     e =  2  
     f = -1  
     
-''' 
+ 
 
 
 ###ResultOf Multiblication without invers
-'''
+ 
 
     126,   
     64,   
@@ -73,10 +66,10 @@ solve system of linear equation with parallel MPI
     83,   
     -96,   
     85,   
-'''
+ 
 
 ##  Inverse of A
-'''
+ 
 
      -28/71	31/142	14/71	13/71	-5/71	-13/142  
      -103/284	109/284	79/142	-23/142	45/284	23/284  
@@ -84,7 +77,7 @@ solve system of linear equation with parallel MPI
      -537/568	367/568	223/284	-11/284	3/568	-131/568  
      713/568	-363/568	-267/284	31/284	69/568	111/568  
      -43/284	-51/284	-7/142	29/142	5/284	-29/284  
-'''
+ 
 
 
 
