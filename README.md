@@ -3,22 +3,24 @@ solve system of linear equation with parallel MPI
 
 
 
- ### issue
- 1. not implemnet matrix reverse 
+# Issue
+ 1. not implemnet matrix inverse 
 
 
- # Formla
+# Formla
    --
 
-## link : http://mathforum.org/library/drmath/view/55482.html
-    '''
+#### link : http://mathforum.org/library/drmath/view/55482.html
+
+     
      a +  b - 2c +  d + 3e -  f  =    4
     2a -  b +  c + 2d +  e - 3f  =   20
      a + 3b - 3c -  d + 2e +  f  =  -15
     5a + 2b -  c -  d + 2e +  f  =  - 3
-   -3a -  b + 2c + 3d +  e + 3f  =   16
+    -3a -  b + 2c + 3d +  e + 3f  =   16
     4a + 3b +  c - 6d - 3e - 2f  =  -27
-    '''
+    
+    
 ## matrix A
 1 1 -2 1 3 -1
 2 -1 1 2 1 -3
@@ -28,13 +30,14 @@ solve system of linear equation with parallel MPI
 4 3 1 -6 -3 -2
 
 ## matrix C
+
 '''
-4 
-20
--15
--3
-16
--27
+ 4 
+ 20  
+ -15  
+ -3  
+ 16 
+ -27  
 '''
 
 # Result
