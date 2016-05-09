@@ -1,7 +1,7 @@
  /**
- * Problem     : Paralle Assignment#5  Basic Linear Algebra Subroutine with Minimum comunication
+ * Problem     : Paralle Assignment#5  Basic Linear Algebra Subroutine
  * Author      : Almgwary
- * Date        : 8-May-2016
+ * Date        : 4-May-2016
  * Thin        : 
  **/
 
@@ -108,15 +108,6 @@ int * matrix_multiblication(int* A, int* B, int A_r, int A_c, int B_r, int B_c){
 	return C;
 }               
 
-
-/**
- * if A[n*n],B[n*1],C[n*1] is Matrices and AC=B then C=A^-1*B
- * get input one Matrix of (A^-1*B) of size [n*(n+1)]
- * scatter the Matrix between process
- * collect B in each Process
- * GatherAll B in each Process
- * do Multiblication
- **/
 int main(int argc, char  *argv[])
 {
  	int my_rank;
@@ -136,16 +127,14 @@ int main(int argc, char  *argv[])
 		B_r = 0, B_c = 0;
 	int *A,*B,*C;
  	 
-	int N ;
+
  	
  	if(my_rank==0){
- 		printf("Welcome to vector Matrix multiplication program! Allgather\n");
+ 		printf("Welcome to vector Matrix multiplication program!\n");
 		FILE *file= fopen("test.txt","r+"); //readFromFile
 		if(file!=NULL){
-			
-			fscanf(file,"%d",&N);
-			 A_r = N ;A_c = N ;
-			 B_r = N ;B_c = 1 ;
+			fscanf(file,"%d%d",&A_r,&A_c);
+			fscanf(file,"%d%d",&B_r,&B_c);
 			// check dimnsions of matrix is divisable by # of process
 			if (A_c%size != 0)
 		 	{
@@ -155,7 +144,8 @@ int main(int argc, char  *argv[])
 		 	}
 		 	// check that  A  [n*n], B  [n*1]
 			if(A_c==B_r && A_c==A_r && B_c == 1){
-				arr_alloc_file_input(file,&A,N,(N+1)); 
+				arr_alloc_file_input(file,&A,A_r,A_c);
+				arr_alloc_file_input(file,&B,B_r,B_c);
 				arr_alloc(&C,A_r,B_c);			 
 			}else{
 				printf("not Valid Matrix dimentions");
@@ -165,9 +155,10 @@ int main(int argc, char  *argv[])
 			fclose(file);
 		}else{printf("unable to open file");}
  		printf("------ A ---------\n");
-		printMatrix(A , N ,N+1);
-		 
- 		//scanf("%d",&N);
+		printMatrix(A , A_r ,A_c);
+		printf("------ B ---------\n");
+		printMatrix(B , B_r ,B_c);
+ 
  
  	}
  	 
@@ -177,15 +168,17 @@ int main(int argc, char  *argv[])
  	MPI_Bcast (&B_c, 1, MPI_INT, 0, MPI_COMM_WORLD);
  	MPI_Bcast (&B_r, 1, MPI_INT, 0, MPI_COMM_WORLD);
  	// allocations
- 	if (my_rank!=0){arr_alloc(&A,A_r,(A_r+1));}
- 	// all process allocate B to make GatherAll on it
- 	arr_alloc(&B,B_r,B_c);
-
+ 	if (my_rank!=0)
+ 	{
+ 		arr_alloc(&A,A_r,A_c);
+ 		arr_alloc(&B,B_r,B_c);
+ 		arr_alloc(&C,A_r,B_c);
+ 	}
  	// n is dimention 
  	int n = A_r ;
    
    /**
- 	* Scatter A smallA and collect smallB from smallA
+ 	* Scatter A and B to smallA and smallB
  	* 
  	* smallA.size = nRows*n
  	* nRows = n/size ;
@@ -196,7 +189,7 @@ int main(int argc, char  *argv[])
  	//allocate
  	int *smallA , *smallB;
  	int nRows = n/size ;
- 	int smallA_size = nRows*(n+1);
+ 	int smallA_size = nRows*n;
  	int smallB_size = n/size ;
 
  	arr_alloc(&smallA, smallA_size, 1);
@@ -204,76 +197,71 @@ int main(int argc, char  *argv[])
  	
  	//Scatter A
  	MPI_Scatter(A,smallA_size,MPI_INT,smallA,smallA_size,MPI_INT,0,MPI_COMM_WORLD);
+ 	//Scatter B
+ 	MPI_Scatter(B,smallB_size,MPI_INT,smallB,smallB_size,MPI_INT,0,MPI_COMM_WORLD);
  	
- 	// collect smallB in each process
- 	// index : smallB index in smallA
- 	int j , index=n ;
- 	for ( j = 0; j <= nRows; ++j)
- 	{
- 		smallB[j] = smallA[index];
- 		index+= (n+1) ; 
- 	}
 
- 	// printf("\n---------P%d-----smallA-------\n",my_rank);
+ 	// printf("---------P%d------------\n",my_rank);
  	// printMatrix(smallA, 1, smallA_size);
-
-
- 	// printf("\n---------P%d-----smallB-------\n",my_rank);
  	// printMatrix(smallB, 1, smallB_size);
 
    /**
-   	* make each process AllGather it smallB then all process have the B
-   	* prebare matrix B to AllGather the smallB
-   	* 
+   	* make each process Bcast its smallB then all process do corresponing calculations
+   	* prebare matrix smallB_Cast to bCast the smallB
+   	* copy matrix memcpy(smallB_Cast, smallB, smallB_size * sizeof(int));
    	* prebare matrix smallC to store the result
    	* smallC.size  = smallB.size = n/size ;  
    	*
    	**/
 
    	// allocation
-	int *smallC ,smallC_size=n/size;
+	int *smallB_Cast ,*smallC ,smallC_size=n/size;
 	
-	
+	arr_alloc(&smallB_Cast, smallB_size, 1);
 	arr_alloc(&smallC, smallC_size, 1);
 	arr_init(smallC, smallC_size, 1, 0);
 
-
-	MPI_Allgather( smallB , smallB_size,MPI_INT,B,smallB_size,MPI_INT,MPI_COMM_WORLD);
-	
-
-	if (my_rank==0)		
+	// each process casting smallB
+	int i = 0 ;
+	for ( i = 0; i < size; ++i)
 	{
-		 printf("\n---------B after Allgather-------\n",my_rank);
- 		 printMatrix(B, 1, n);
-
-	}
-
- 
-  
- 
-	j = 0 ; 
-	for ( j ; j < nRows; ++j) // for each row in smallA
-	{
-		int sum = 0 ;
-		int j2 = 0 ; 
-		for ( j2 = 0; j2 < n; ++j2)
+		// prepare my smallB_Cast from smallB
+		if (my_rank == i )
 		{
-			sum+=(smallA[j2+(j*(n+1))] * B[j2]);
-			/*
-				smalA[j2+(j*(n+1))]
-				  j2 -> go in cloumn
-				  (j*(n+1)) -> go in row and skip merged B
-			*/
-			//printf("P%d: [%d - %d]\n",my_rank,smallA[j2+(j*(n+1))], B[j2] );
-			
-			
-		}
-		smallC[j] = sum ;
- 	}
- 
+		  memcpy(smallB_Cast, smallB, smallB_size * sizeof(int));
+		  printf("P%d sending smallB\n", my_rank);
 
-	// collect smallC
-	MPI_Gather(smallC , smallC_size , MPI_INT , C , smallC_size , MPI_INT , 0 , MPI_COMM_WORLD);
+		} 
+		
+		// casting from root i
+		MPI_Bcast (smallB_Cast , smallB_size , MPI_INT , i , MPI_COMM_WORLD);
+		 
+	   /**
+	    *  do  work and store result
+	    *  for each row in smallA 
+	    *      r0 start from piont x =[i*smallB_size]
+	    *      r1 start from piont x =[i*smallB_size+n]
+	    *      rj start from piont x =[i*smallB_size+(n*j)]
+	    *      go from  x = start point to < (x+smallB_size)
+	    *      multibly and sum in smallC[CurrentRow]
+		**/
+
+	    int j = 0 ; 
+		for ( j ; j < nRows; ++j) // for each row in smallA
+		{
+			//   
+			int x = i*smallB_size+(n*j) , x_init=i*smallB_size+(n*j) ;
+			int b = 0 ; // iterat over smallB_Cast
+			for ( x ; x < (x_init+smallB_size); ++x)// for each cell in row
+			{
+			 	smallC[j]+= (smallA[x]*smallB_Cast[b]);
+			 	b++;
+			}
+		}
+		 
+		// collect smallC
+ 		MPI_Gather(smallC , smallC_size , MPI_INT , C , smallC_size , MPI_INT , 0 , MPI_COMM_WORLD);
+	}
 
 	if (my_rank==0)
  	{
@@ -283,7 +271,17 @@ int main(int argc, char  *argv[])
 
 
 	MPI_Finalize();
- 	return 0; 	
+ 	return 0;
+
+ 
+// 	MPI_Gather(subC ,nRow*B_c ,MPI_INT , C , nRow*B_c, MPI_INT, 0, MPI_COMM_WORLD  );
+
+
+
+
+ 	 
+ 	 
+ 	
  }
  	 
  

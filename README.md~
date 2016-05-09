@@ -1,5 +1,5 @@
 # Parallel-MPI-Basic-Linear-Algebra-Subroutine
-solve system of linear equation with parallel MPI just one scatter and one allGather with minimum communcation
+solve system of linear equation with parallel MPI
 
 
 
