@@ -2,6 +2,7 @@
 solve system of linear equation with parallel MPI just one scatter and one allGather with minimum communcation
 
 
+![Alt text](/screenShot.PNG?raw=true "")
 
 # Issue
  1. not implemnet matrix inverse 
